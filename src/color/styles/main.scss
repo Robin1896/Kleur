@@ -1,0 +1,26 @@
+.rule-of-thirds {
+
+    &__image {
+        height: 100vh;
+        &__gridoverlay {
+            position: absolute;
+            z-index: 99999;
+            &__item {
+                position: absolute;
+                z-index: 99999;
+                &__point {
+                    height: 15px;
+                    width: 15px;
+                    background-color: black;
+                    border-radius: 50%;
+                }
+            }
+        }
+    }
+
+
+    img {
+        height: 75vh;
+        position: relative;
+    }
+}
