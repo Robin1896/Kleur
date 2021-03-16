@@ -13,6 +13,10 @@ class Color extends React.Component {
         this.state = {
             object: [],
             colors: [],
+            colordiff: [],
+            colordiff2: [],
+            colordiffres: [],
+            percent: [],
         };
     }
 
@@ -38,6 +42,8 @@ class Color extends React.Component {
             imageProps: file
         });
         this.apiRequest();
+        
+
     }
 
     apiRequest() {
@@ -45,19 +51,64 @@ class Color extends React.Component {
             image: new vision.Image({
                 base64: this.state.base64,
             }),
-            features: [new vision.Feature('IMAGE_PROPERTIES', 10),]
+            features: [new vision.Feature('IMAGE_PROPERTIES', 2),]
         })
 
         vision.annotate(req)
             .then((res) => {
                 var object = res.responses[0].imagePropertiesAnnotation.dominantColors.colors;
-                console.log(object)
+                var object2 = res.responses[0].imagePropertiesAnnotation.dominantColors.colors[0].color;
+                var object3 = res.responses[0].imagePropertiesAnnotation.dominantColors.colors[1].color;
                 this.setState({
-                    colors: object
+                    colors: object,
+                    colordiff: object2,
+                    colordiff2: object3,
                 })
+                this.colorDistance();
             }, (e) => {
                 alert("foutje")
             });
+            
+
+    }
+
+    colorDistance() {
+        var diffR,diffG,diffB;
+        var redone = this.state.colordiff.red;
+        var redtwo = this.state.colordiff2.red;
+        var greenone = this.state.colordiff.green
+        var greentwo = this.state.colordiff2.green
+        var blueone = this.state.colordiff.blue
+        var bluetwo = this.state.colordiff2.blue
+        // distance to color
+        diffR=( redone - redtwo );
+        diffG=( greenone - greentwo );
+        diffB=( blueone - bluetwo );
+
+        var degr = Math.sqrt(diffR*diffR + diffG*diffG + diffB*diffB)
+
+        if (degr >= 90) {
+            //Complementair
+            degr = degr-90;
+            var score = (((degr*100))/270).toFixed(2)
+            this.setState({percent: score + "% Complementaire kleuren" });
+        } else if (degr < 90) {
+            // Analogue
+            if(degr >= 60){
+                // 90 = 0 %
+                // 60 = 100%
+                degr = degr-60;
+             score = (((degr*100))/30).toFixed(2)
+            this.setState({percent: score + "% analoge kleuren" });
+            }
+            else if (degr<60){
+                //60 = 100%
+                //0 = 0%
+                 score = ((degr*100)/60).toFixed(2)
+                this.setState({percent: score + "% analoge kleuren" });
+            }
+          
+        }
 
     }
 
@@ -198,24 +249,27 @@ class Color extends React.Component {
             return '#' + iter;
         };
 
+
+
         const colors = this.state.colors?.map((a) =>
             <div>
                 <div key = {a}>
-                    #1 Dominant color : {"# "+fullColorHex(a.color.red,a.color.green,a.color.blue)} <br></br> score : {a.score*100} 
+                    score : {a.score*100} 
                 </div> 
                 <div style = {{backgroundColor: "#" + fullColorHex(a.color.red, a.color.green, a.color.blue)}}></div> 
                 <div style = {{backgroundColor: "#" + fullColorHex(a.color.red, a.color.green, a.color.blue)}}> {"#" + fullColorHex(a.color.red, a.color.green, a.color.blue)} </div> 
                 <div style = {{backgroundColor: getComplementaryColor("#" + fullColorHex(a.color.red, a.color.green, a.color.blue))}}>Complementary color: {getComplementaryColor("#" + fullColorHex(a.color.red, a.color.green, a.color.blue))} </div>
                 <div style = {{backgroundColor: changeHue(getComplementaryColor("#" + fullColorHex(a.color.red, a.color.green, a.color.blue)), 30)}}>Analogue color 1: {changeHue(getComplementaryColor("#" + fullColorHex(a.color.red, a.color.green, a.color.blue)), 30)} </div>
-                <div style = {{backgroundColor: changeHue(getComplementaryColor("#" + fullColorHex(a.color.red, a.color.green, a.color.blue)), 0)}}>Analogue color 2: {changeHue(getComplementaryColor("#" + fullColorHex(a.color.red, a.color.green, a.color.blue)), 0)} </div>
-                <div style = {{backgroundColor: changeHue(getComplementaryColor("#" + fullColorHex(a.color.red, a.color.green, a.color.blue)), -30)}}>Analogue color 3: {changeHue(getComplementaryColor("#" + fullColorHex(a.color.red, a.color.green, a.color.blue)), -30)} </div>
+
                 <br></br>
+                
             </div>
         );
 
         return ( 
             <div className = "color" >
                 <div className = "color__image" >
+                    <div>{this.state.percent}</div>
                     <div className = "color__image__gridoverlay__item" ></div>
                     <img ref = {this.dimensions} src = {this.state.base64} alt="afbeelding"/> 
                 </div> 
